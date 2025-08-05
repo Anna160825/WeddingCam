@@ -79,6 +79,7 @@
     const cloudName = 'dpajidihc';
     const uploadPreset = 'WeddingCam';
 
+    // Upload-Logik
     fileInput.addEventListener('change', async () => {
       const files = Array.from(fileInput.files).slice(0, 10); // Max. 10 Bilder
       if (files.length === 0) return;
@@ -115,6 +116,35 @@
       }
 
       statusDiv.textContent = '✅ Alle Bilder wurden hochgeladen!';
+    });
+
+    // Service Worker registrieren
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker registriert'))
+        .catch(err => console.error('❌ Fehler beim Registrieren:', err));
+    }
+
+    // 📱 App-Installations-Prompt anzeigen
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Warten ein paar Sekunden, dann fragen
+      setTimeout(async () => {
+        const wantsInstall = confirm("📲 Willst du WeddingCam wie eine App speichern?");
+        if (wantsInstall && deferredPrompt) {
+          deferredPrompt.prompt();
+          const result = await deferredPrompt.userChoice;
+          if (result.outcome === 'accepted') {
+            console.log("✅ App wurde installiert");
+          } else {
+            console.log("❌ App-Installation abgelehnt");
+          }
+          deferredPrompt = null;
+        }
+      }, 2000); // 2 Sekunden Verzögerung
     });
   </script>
 </body>
