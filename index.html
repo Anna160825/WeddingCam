@@ -31,7 +31,8 @@
       display: none;
     }
 
-    label#customUploadBtn {
+    label#customUploadBtn,
+    button#installBtn {
       background-color: #467480;
       color: white;
       padding: 1rem 2rem;
@@ -39,6 +40,7 @@
       font-size: 1.2rem;
       cursor: pointer;
       display: inline-block;
+      margin-top: 1rem;
     }
 
     #status {
@@ -54,7 +56,8 @@
     }
 
     @media (max-width: 600px) {
-      label#customUploadBtn {
+      label#customUploadBtn,
+      button#installBtn {
         width: 100%;
         font-size: 1.1rem;
       }
@@ -68,6 +71,9 @@
   <input type="file" accept="image/*" id="fileInput" multiple>
   <label for="fileInput" id="customUploadBtn">📤 Bilder auswählen (max. 10)</label>
 
+  <br>
+  <button id="installBtn" style="display:none;">📲 WeddingCam zum Startbildschirm hinzufügen</button>
+
   <div id="status"></div>
   <img id="preview" alt="Vorschau des Bildes">
 
@@ -79,9 +85,8 @@
     const cloudName = 'dpajidihc';
     const uploadPreset = 'WeddingCam';
 
-    // Upload-Logik
     fileInput.addEventListener('change', async () => {
-      const files = Array.from(fileInput.files).slice(0, 10); // Max. 10 Bilder
+      const files = Array.from(fileInput.files).slice(0, 10);
       if (files.length === 0) return;
 
       statusDiv.innerHTML = `⏳ ${files.length} Bild(er) werden hochgeladen...`;
@@ -125,26 +130,27 @@
         .catch(err => console.error('❌ Fehler beim Registrieren:', err));
     }
 
-    // 📱 App-Installations-Prompt anzeigen
+    // App-Installationslogik mit Button
     let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
 
-      // Warten ein paar Sekunden, dann fragen
-      setTimeout(async () => {
-        const wantsInstall = confirm("📲 Willst du WeddingCam wie eine App speichern?");
-        if (wantsInstall && deferredPrompt) {
-          deferredPrompt.prompt();
-          const result = await deferredPrompt.userChoice;
-          if (result.outcome === 'accepted') {
-            console.log("✅ App wurde installiert");
-          } else {
-            console.log("❌ App-Installation abgelehnt");
-          }
-          deferredPrompt = null;
+      installBtn.addEventListener('click', async () => {
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt();
+
+        const result = await deferredPrompt.userChoice;
+        if (result.outcome === 'accepted') {
+          console.log("✅ App wurde installiert");
+        } else {
+          console.log("❌ App-Installation abgelehnt");
         }
-      }, 2000); // 2 Sekunden Verzögerung
+        deferredPrompt = null;
+      });
     });
   </script>
 </body>
