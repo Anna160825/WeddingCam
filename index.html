@@ -7,15 +7,14 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="wedding_app_icon.png">
   <meta name="theme-color" content="#467480">
-  <script src="https://widget.cloudinary.com/v2.0/global/all.js" defer></script>
   <style>
     body {
+      font-family: sans-serif;
+      background-color: #ffffff;
       margin: 0;
       padding: 2rem;
-      background-color: #ffffff;
-      font-family: sans-serif;
-      color: #333;
       text-align: center;
+      color: #333;
     }
 
     h1 {
@@ -28,30 +27,34 @@
       margin-bottom: 2rem;
     }
 
-    #uploadBtn {
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      background-color: #467480;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+    input[type="file"] {
+      display: none;
     }
 
-    #uploadBtn:hover {
-      background-color: #3b616a;
+    label#customUploadBtn {
+      background-color: #467480;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    #status {
+      margin-top: 1.5rem;
+      font-weight: bold;
+    }
+
+    #preview {
+      margin-top: 2rem;
+      max-width: 100%;
+      border-radius: 8px;
+      display: none;
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 1.5rem 1rem;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-      }
-
-      #uploadBtn {
+      label#customUploadBtn {
         width: 100%;
         font-size: 1.1rem;
       }
@@ -60,40 +63,60 @@
 </head>
 <body>
   <h1>Bild für das Gästebuch hochladen</h1>
-  <p>Mach ein Foto oder wähle eines aus deiner Galerie aus:</p>
-  <button id="uploadBtn">📤 Bild auswählen</button>
+  <p>Wähle ein Foto aus deiner Galerie oder mach direkt eins mit der Kamera:</p>
+
+  <input type="file" accept="image/*" capture="environment" id="fileInput">
+  <label for="fileInput" id="customUploadBtn">📤 Bild auswählen</label>
+
+  <div id="status"></div>
+  <img id="preview" alt="Vorschau des Bildes">
 
   <script>
-    // Service Worker registrieren
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('✅ Service Worker registriert'))
-        .catch(err => console.error('❌ Fehler beim Registrieren des Service Workers:', err));
-    }
+    const fileInput = document.getElementById('fileInput');
+    const statusDiv = document.getElementById('status');
+    const previewImg = document.getElementById('preview');
 
-    // Upload-Widget initialisieren
-    let widget;
-    window.addEventListener('load', () => {
-      widget = cloudinary.createUploadWidget({
-        cloudName: 'dpajidihc',
-        uploadPreset: 'WeddingCam',
-        folder: 'gaeste',
-        tags: ['gaeste'],
-        sources: ['camera', 'local'],
-        multiple: false,
-        maxFileSize: 10000000, // 10 MB erlaubt
-        cropping: false,
-        showAdvancedOptions: false
-      }, (error, result) => {
-        if (!error && result && result.event === "success") {
-          alert("✅ Bild erfolgreich hochgeladen!");
-          console.log("Bild-URL:", result.info.secure_url);
+    const cloudName = 'dpajidihc';
+    const uploadPreset = 'WeddingCam';
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Vorschau anzeigen
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+
+      statusDiv.textContent = '⏳ Bild wird hochgeladen...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('tags', 'gaeste');
+      formData.append('folder', 'gaeste');
+
+      try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.secure_url) {
+          statusDiv.textContent = '✅ Bild erfolgreich hochgeladen!';
+          console.log('Bild-URL:', data.secure_url);
+        } else {
+          throw new Error('Upload fehlgeschlagen');
         }
-      });
-    });
-
-    document.getElementById('uploadBtn').addEventListener('click', () => {
-      if (widget) widget.open();
+      } catch (err) {
+        console.error(err);
+        statusDiv.textContent = '❌ Fehler beim Hochladen';
+      }
     });
   </script>
 </body>
