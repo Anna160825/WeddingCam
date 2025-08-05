@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>WeddingCam</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="wedding_app_icon.png">
+  <meta name="theme-color" content="#467480">
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js" defer></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      background-color: #ffffff;
+      font-family: sans-serif;
+      color: #333;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    #uploadBtn {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      background-color: #467480;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #uploadBtn:hover {
+      background-color: #3b616a;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #uploadBtn {
+        width: 100%;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Bild für das Gästebuch hochladen</h1>
+  <p>Mach ein Foto oder wähle eines aus deiner Galerie aus:</p>
+  <button id="uploadBtn">📤 Bild auswählen</button>
+
+  <script>
+    // Service Worker registrieren
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker registriert'))
+        .catch(err => console.error('❌ Fehler beim Registrieren des Service Workers:', err));
+    }
+
+    // Upload-Widget initialisieren
+    let widget;
+    window.addEventListener('load', () => {
+      widget = cloudinary.createUploadWidget({
+        cloudName: 'dpajidihc',
+        uploadPreset: 'WeddingCam',
+        folder: 'gaeste',
+        tags: ['gaeste'],
+        sources: ['camera', 'local'],
+        multiple: false,
+        maxFileSize: 10000000, // 10 MB erlaubt
+        cropping: false,
+        showAdvancedOptions: false
+      }, (error, result) => {
+        if (!error && result && result.event === "success") {
+          alert("✅ Bild erfolgreich hochgeladen!");
+          console.log("Bild-URL:", result.info.secure_url);
+        }
+      });
+    });
+
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      if (widget) widget.open();
+    });
+  </script>
+</body>
+</html>
