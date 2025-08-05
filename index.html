@@ -43,8 +43,7 @@
       display: none;
     }
 
-    label#customUploadBtn,
-    button#installBtn {
+    label#customUploadBtn {
       background-color: #467480;
       color: white;
       padding: 1rem 2rem;
@@ -69,8 +68,7 @@
     }
 
     @media (max-width: 600px) {
-      label#customUploadBtn,
-      button#installBtn {
+      label#customUploadBtn {
         width: 100%;
         font-size: 1.1rem;
       }
@@ -84,10 +82,11 @@
   <input type="file" accept="image/*" id="fileInput" multiple>
   <label for="fileInput" id="customUploadBtn">📤 Bilder auswählen (max. 10)</label>
 
-  <p><strong>📲 WeddingCam zum Startbildschirm hinzufügen</strong><br>
-  So hast du die Kamera-App immer direkt griffbereit!</p>
-
-  <button id="installBtn">📲 Zum Startbildschirm hinzufügen</button>
+  <p style="font-size: 1rem; color: #333;">
+    📲 <strong>WeddingCam zum Startbildschirm hinzufügen:</strong><br>
+    <strong>Android:</strong> In Chrome oben rechts im Menü „Zum Startbildschirm hinzufügen“<br>
+    <strong>iPhone:</strong> In Safari auf das <strong>Teilen-Symbol (🔗)</strong> tippen und dann „Zum Home-Bildschirm“
+  </p>
 
   <div id="status"></div>
   <img id="preview" alt="Vorschau des Bildes">
@@ -144,49 +143,6 @@
         .then(() => console.log('✅ Service Worker registriert'))
         .catch(err => console.error('❌ Fehler beim Registrieren:', err));
     }
-
-    // Installieren-Button immer anzeigen
-    const installBtn = document.getElementById('installBtn');
-    let deferredPrompt;
-
-    // Zeige Button standardmäßig
-    installBtn.style.display = 'inline-block';
-
-    // Android: beforeinstallprompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-
-      installBtn.addEventListener('click', async () => {
-        deferredPrompt.prompt();
-        const result = await deferredPrompt.userChoice;
-
-        if (result.outcome === 'accepted') {
-          console.log("✅ App wurde installiert");
-          installBtn.style.display = 'none';
-        } else {
-          console.log("❌ App-Installation abgelehnt");
-        }
-
-        deferredPrompt = null;
-      });
-    });
-
-    // iOS-Fallback
-    window.addEventListener('load', () => {
-      const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-      const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
-
-      if (isIOS && !isInStandaloneMode && !deferredPrompt) {
-        statusDiv.innerHTML = `
-          <p style="margin-top: 1rem; color: #555;">
-            📱 <strong>iPhone-Nutzer:</strong><br>
-            Tippe unten auf <strong>Teilen</strong> (🔗 Symbol) <br>
-            und wähle <strong>„Zum Home-Bildschirm hinzufügen“</strong>.
-          </p>
-        `;
-      }
-    });
   </script>
 </body>
 </html>
