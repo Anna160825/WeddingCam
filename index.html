@@ -8,23 +8,35 @@
   <link rel="icon" href="wedding_app_icon.png">
   <meta name="theme-color" content="#467480">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: sans-serif;
       background-color: #ffffff;
       margin: 0;
-      padding: 2rem;
+      padding: 2rem 1rem;
       text-align: center;
       color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
     }
 
     h1 {
       font-size: 1.8rem;
-      margin-bottom: 1rem;
+      margin: 1rem 0;
+      line-height: 1.2;
+      max-width: 90%;
     }
 
     p {
       font-size: 1rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
+      max-width: 90%;
     }
 
     input[type="file"] {
@@ -40,7 +52,8 @@
       font-size: 1.2rem;
       cursor: pointer;
       display: inline-block;
-      margin-top: 1rem;
+      margin: 1rem auto;
+      border: none;
     }
 
     #status {
@@ -71,8 +84,10 @@
   <input type="file" accept="image/*" id="fileInput" multiple>
   <label for="fileInput" id="customUploadBtn">📤 Bilder auswählen (max. 10)</label>
 
-  <br>
-  <button id="installBtn" style="display:none;">📲 WeddingCam zum Startbildschirm hinzufügen</button>
+  <p><strong>📲 WeddingCam zum Startbildschirm hinzufügen</strong><br>
+  So hast du die Kamera-App immer direkt griffbereit!</p>
+
+  <button id="installBtn">📲 Zum Startbildschirm hinzufügen</button>
 
   <div id="status"></div>
   <img id="preview" alt="Vorschau des Bildes">
@@ -130,27 +145,47 @@
         .catch(err => console.error('❌ Fehler beim Registrieren:', err));
     }
 
-    // App-Installationslogik mit Button
-    let deferredPrompt;
+    // Installieren-Button immer anzeigen
     const installBtn = document.getElementById('installBtn');
+    let deferredPrompt;
 
+    // Zeige Button standardmäßig
+    installBtn.style.display = 'inline-block';
+
+    // Android: beforeinstallprompt
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      installBtn.style.display = 'inline-block';
 
       installBtn.addEventListener('click', async () => {
-        installBtn.style.display = 'none';
         deferredPrompt.prompt();
-
         const result = await deferredPrompt.userChoice;
+
         if (result.outcome === 'accepted') {
           console.log("✅ App wurde installiert");
+          installBtn.style.display = 'none';
         } else {
           console.log("❌ App-Installation abgelehnt");
         }
+
         deferredPrompt = null;
       });
+    });
+
+    // iOS-Fallback
+    window.addEventListener('load', () => {
+      const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+
+      if (isIOS && !isInStandaloneMode && !deferredPrompt) {
+        statusDiv.innerHTML = `
+          <p style="margin-top: 1rem; color: #555;">
+            📱 <strong>iPhone-Nutzer:</strong><br>
+            Tippe unten auf <strong>Teilen</strong> (🔗 Symbol) <br>
+            und wähle <strong>„Zum Home-Bildschirm hinzufügen“</strong>.
+          </p>
+        `;
+      }
     });
   </script>
 </body>
